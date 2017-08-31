@@ -38,8 +38,19 @@
         private function sort_tags_popularity_desc($a, $b) {
             return $a["popularity"] < $b["popularity"];
         }
+        
+//added for php intl.so extension support   , better multibyte compare     
+		private function mb_is_string_equal_ci($string1, $string2) {
+			$string1_normalized = Normalizer::normalize($string1, Normalizer::FORM_KC);
+			$string2_normalized = Normalizer::normalize($string2, Normalizer::FORM_KC);
+				
+			return mb_strtolower($string1_normalized) === mb_strtolower($string2_normalized)
+            || mb_strtoupper($string1_normalized) === mb_strtoupper($string2_normalized);
+		}
 
-        private function mb_strcasecmp($str1, $str2, $encoding = "UTF-8") {
+/*   old function, return error if arabic and hindi font injected to db
+
+		private function mb_strcasecmp($str1, $str2, $encoding = "UTF-8") {
             $str1 = preg_replace("/[[:punct:]]+/", "", $str1);
             $str2 = preg_replace("/[[:punct:]]+/", "", $str2);
 
@@ -48,6 +59,19 @@
 
             return substr_compare(mb_strtoupper($str1, $encoding), mb_strtoupper($str2, $encoding), 0);
         }
+*/
+
+		private function mb_strcasecmp($str1, $str2, $encoding = "UTF-8") {
+            $str1 = preg_replace("/[[:punct:]]+/", "", $str1);
+            $str2 = preg_replace("/[[:punct:]]+/", "", $str2);
+
+            if (!function_exists("mb_strtoupper"))
+                return $this->mb_is_string_equal_ci(strtoupper($str1), strtoupper($str2));
+
+            return $this->mb_is_string_equal_ci(mb_strtoupper($str1, $encoding), mb_strtoupper($str2, $encoding));
+        }
+  
+        
 
         private function tags_name_match($name) {
             # Serialized notation of key for SQL queries.
